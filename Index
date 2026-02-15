@@ -1,0 +1,122 @@
+Build a bilingual (Arabic/English) web app called "SmallSteps" that helps employees make steady progress toward a high-level work objective by always suggesting the next small actionable step, tracking what they did, and preventing repeated suggestions.
+
+IMPORTANT PRODUCT RULES
+- The product is ALWAYS individual-only. No Team Mode, no manager dashboards, no shared objectives.
+- Later we support exporting a progress report for the user to share with their manager, but still individual-only.
+
+TECH STACK
+- Next.js 14+ (App Router) + TypeScript
+- Tailwind CSS
+- next-intl for i18n (ar/en) with full RTL support for Arabic
+- Prisma + PostgreSQL
+
+- Auth: email + password (NO OTP). Use NextAuth credentials provider OR custom auth. Hash passwords with bcrypt.
+- Password reset via email link is allowed (for recovery only).
+- OpenAI API for step generation (OPENAI_API_KEY). Validate outputs with zod.
+
+BRANDING / UI
+- Youthful, modern UI with a vibrant gradient accent (do not use dull corporate colors).
+- Clean, minimal but energetic: rounded cards, subtle shadows, lively highlights, smooth micro-interactions.
+- Support Dark Mode + Light Mode.
+- Arabic: RTL layout. English: LTR. Numeric fields centered; text aligned by locale.
+- Add a compact top bar with logo + app name "SmallSteps".
+- Add a simple onboarding screen explaining: "Write your objective → get the next step → act → track progress".
+
+LOGO DESIGN (create assets in-code)
+- Design a simple, modern vector logo (SVG) that fits the brand:
+  - Icon concept: 3 ascending rounded steps forming an upward path, optionally with a small arrow/spark at the top.
+  - Style: flat/duotone, works in mono too.
+  - Provide 2 variants: full (icon + wordmark) and icon-only.
+  - Provide as SVG files in /public/brand:
+    - /public/brand/smallsteps-icon.svg
+    - /public/brand/smallsteps-full.svg
+- Wordmark: “SmallSteps” (English) and “خطوات صغيرة” (Arabic) as optional lockup; ensure legibility at small sizes.
+
+CORE USER FLOW
+1) Sign up / login:
+   - Sign up: email + password + locale preference (ar/en)
+   - Login: email + password + remember me
+   - Optional: "Continue as Guest" (stores data locally only)
+2) Dashboard:
+   - List Objectives (active / archived)
+   - Create objective (title + optional description + optional constraints)
+3) Objective details:
+   - Button: "Generate Next Step"
+   - Show a "Step Card" with:
+     - step_title (verb + object, very concrete)
+     - expected_outcome
+     - prerequisites (array)
+     - estimated_minutes (10/20/30/45/60)
+     - dependency (none / needs-approval / waiting-on-someone)
+     - optional template (email/message/checklist)
+   - User actions:
+     A) "I will do this" -> status planned
+     B) "Already done" -> status done
+     C) "Regenerate" -> new suggestion that differs materially
+     D) "Not applicable" -> status skipped + reason (no access / missing info / depends on others / irrelevant)
+   - Progress panel:
+     - counts of planned/done/skipped
+     - a simple progress indicator + “streak” (days with at least 1 step marked planned/done)
+
+REPORT EXPORT (individual-only)
+- Provide an "Export Report" button per objective:
+  - Exports a clean report in PDF and Markdown:
+    - Objective title + timeframe
+    - Steps (planned/done/skipped) with timestamps
+    - Summary stats and short narrative auto-generated (optional)
+- The user can download/share it, but no in-app sharing.
+
+DATA MODEL (Prisma)
+- User(id, email unique, passwordHash, locale, createdAt)
+- Objective(id, userId, title, description, constraintsJson, privateMode boolean, status active|archived, createdAt, updatedAt)
+- StepSuggestion(
+    id, objectiveId, createdAt,
+    model, promptHash,
+    stepJson (JSON),
+    fingerprint (string),
+    status proposed|planned|done|skipped,
+    skipReason nullable,
+    userFeedback nullable
+  )
+- Guest storage:
+  - If guest mode: store objectives + steps in local storage/IndexedDB with same schema shape.
+  - Provide a "Convert Guest to Account" flow that migrates local data into the DB after signup.
+
+DUPLICATE PREVENTION
+- Store a deterministic fingerprint per step, derived from:
+  action_type + main_entity + outcome_type
+- Block re-suggestions by fingerprint per objective.
+- Also do near-duplicate blocking:
+  - normalize strings (lowercase, remove punctuation/stopwords)
+  - compute similarity and block if too close
+- If user clicks "Regenerate", it must avoid blocked_fingerprints and blocked_examples.
+
+LLM GENERATION CONTRACT
+- ALWAYS return strict JSON.
+- If the objective is too vague, ask exactly ONE clarifying question instead of generating a step:
+  Return JSON: { "needs_clarification": true, "question": "..." }
+- Otherwise return:
+  {
+    "needs_clarification": false,
+    "step_title": "...",
+    "expected_outcome": "...",
+    "prerequisites": ["..."],
+    "estimated_minutes": 10|20|30|45|60,
+    "dependency": "none"|"needs-approval"|"waiting-on-someone",
+    "template": { "type": "email"|"message"|"checklist", "content": "..." } | null,
+    "fingerprint_parts": { "action_type": "...", "main_entity": "...", "outcome_type": "..." }
+  }
+- Enforce with zod schema validation. If invalid, retry once with a repair prompt; if still invalid, show a user-friendly error.
+
+PRIVACY / SAFETY
+- Do not log objective text or step content to console in production.
+- privateMode per objective:
+  - If enabled: send only title + a redacted summary to the LLM (no description/constraints), and warn the user in UI.
+- Rate limit generation per user (e.g., 30/day) and per objective (e.g., 10/hour).
+- Store minimal telemetry (counts only), no raw content.
+
+DELIVERABLES
+- Full working repo
+- README with setup, migrations, env vars, and demo
+- Seed script creating a demo user + demo objective
+- Clean UI with responsive design, RTL support, and Dark/Light mode
