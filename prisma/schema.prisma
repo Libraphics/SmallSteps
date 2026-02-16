@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Locale {
+  en
+  ar
+}
+
+enum ObjectiveStatus {
+  active
+  archived
+}
+
+enum SuggestionStatus {
+  proposed
+  planned
+  done
+  skipped
+}
+
+model User {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  passwordHash String
+  locale       Locale      @default(en)
+  createdAt    DateTime    @default(now())
+  objectives   Objective[]
+}
+
+model Objective {
+  id              String            @id @default(cuid())
+  userId          String
+  title           String
+  description     String?
+  constraintsJson Json?
+  privateMode     Boolean           @default(false)
+  status          ObjectiveStatus   @default(active)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  suggestions     StepSuggestion[]
+}
+
+model StepSuggestion {
+  id           String           @id @default(cuid())
+  objectiveId  String
+  createdAt    DateTime         @default(now())
+  model        String
+  promptHash   String
+  stepJson     Json
+  fingerprint  String
+  status       SuggestionStatus @default(proposed)
+  skipReason   String?
+  userFeedback String?
+  objective    Objective        @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+
+  @@index([objectiveId, fingerprint])
+}

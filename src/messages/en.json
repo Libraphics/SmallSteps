@@ -1,0 +1,9 @@
+{
+  "appName": "SmallSteps",
+  "onboarding": "Write your objective → get the next step → act → track progress",
+  "generate": "Generate Next Step",
+  "planned": "I will do this",
+  "done": "Already done",
+  "regenerate": "Regenerate",
+  "notApplicable": "Not applicable"
+}

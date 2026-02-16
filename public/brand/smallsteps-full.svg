@@ -1,0 +1,10 @@
+<svg width="340" height="80" viewBox="0 0 340 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(4,8)">
+    <rect x="0" y="36" width="22" height="18" rx="7" fill="#7A5CFF"/>
+    <rect x="20" y="22" width="22" height="18" rx="7" fill="#5A4DF5"/>
+    <rect x="40" y="8" width="22" height="18" rx="7" fill="#35C3FF"/>
+    <path d="M51 6L58 0M58 0H53M58 0V5" stroke="#35C3FF" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <text x="82" y="33" fill="#1D2340" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700">SmallSteps</text>
+  <text x="84" y="60" fill="#4A3FD1" font-family="Tahoma, Arial, sans-serif" font-size="20" font-weight="600">خطوات صغيرة</text>
+</svg>

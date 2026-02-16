@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: 246 248 255;
+  --fg: 18 22 40;
+}
+
+.dark {
+  --bg: 12 14 27;
+  --fg: 244 247 255;
+}
+
+body {
+  background: rgb(var(--bg));
+  color: rgb(var(--fg));
+}
+
+.card {
+  @apply rounded-2xl bg-white/70 dark:bg-slate-900/70 backdrop-blur shadow-soft p-5 border border-white/40 dark:border-slate-800;
+}
